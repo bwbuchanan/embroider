@@ -4,7 +4,22 @@ import type { ASTv1 } from '@glimmer/syntax';
 // This is the AST transform that resolves components, helpers and modifiers at build time
 // and puts them into `dependencies`.
 export function makeResolverTransform(resolver: Resolver) {
-  function resolverTransform({ filename, contents }: { filename: string; contents: string }) {
+  function resolverTransform({
+    filename,
+    contents,
+    strictMode,
+  }: {
+    filename: string;
+    contents: string;
+    strictMode: boolean;
+  }) {
+    if (strictMode) {
+      return {
+        name: 'embroider-build-time-resolver[skipped]',
+        visitor: {},
+      };
+    }
+
     resolver.enter(filename, contents);
 
     let scopeStack = new ScopeStack();

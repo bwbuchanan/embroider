@@ -82,6 +82,7 @@ describe('compat-resolver', function () {
       podModulePrefix?: string;
       adjustImportsImports?: Partial<AdjustImportsOptions>;
       plugins?: TemplateCompilerPlugins;
+      strictMode?: boolean;
     } = {}
   ) {
     let EmberENV = {};
@@ -115,7 +116,10 @@ describe('compat-resolver', function () {
     let compiler = new NodeTemplateCompiler({ compilerPath, compilerChecksum, resolver, EmberENV, plugins });
     return function (relativePath: string, contents: string) {
       let moduleName = givenFile(relativePath);
-      let { dependencies } = compiler.precompile(contents, { filename: moduleName });
+      let { dependencies } = compiler.precompile(contents, {
+        filename: moduleName,
+        strictMode: otherOptions.strictMode,
+      });
       return sortBy(dependencies, d => d.runtimeName).map(d => ({
         path: d.path,
         runtimeName: d.runtimeName,
@@ -1923,5 +1927,10 @@ describe('compat-resolver', function () {
     expect(findDependencies('templates/application.hbs', `{{component (ensure-safe-component this.which) }}`)).toEqual(
       []
     );
+  });
+
+  test('dynamic component checks are skipped in strict mode', function () {
+    let findDependencies = configure({ staticComponents: true }, { strictMode: true });
+    expect(findDependencies('templates/application.hbs', `{{component this.which}}`)).toEqual([]);
   });
 });
